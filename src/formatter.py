@@ -1,12 +1,9 @@
 # formatter.py
 
-
-# Import Packages:
 import numpy as np
 import pandas as pd
 import random
 import string
-import copy
 
 ###################################################
 

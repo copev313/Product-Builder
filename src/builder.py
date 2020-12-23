@@ -1,13 +1,22 @@
 # builder.py
 
-# Package Imports:
 import pandas as pd
 import sys
 
-# Import Functions Module:
 import formatter as form
+import shopify.shopify_builder
+import etsy.etsy_builder
 
 ###############################################################
+
+def build(build_type=''):
+  if(build_type == 'Shopify'):
+    shopify_builder()
+  elif(build_type == 'Etsy'):
+    etsy_builder()
+  else:
+    pass #TODO: Add Popup Message for 'Not yet implemented...'
+
 
 # -- CATCH: Bad Headers
 try:
@@ -29,28 +38,8 @@ weight = form.grams_to_pounds( grams )
 ###price = # NEEDS SPECIAL FUNCTION...
 
 #################################################################
-# TODO: Add Text Fields to Take in this Data
 
-# Accept User Input From Console For Email & Brand Name
-while ( True ):
-  email = str(input("Enter Vendor's Email: "))  or  'email@email.com'
-  brand = str(input("Enter Vendor's Brand Name: "))  or  'BRAND NAME'
-  print("\nVendor's Data Received...\n")
-
-  #) Confirmation Before Moving On
-  print("Email: {e}\nBrand: {b}\n".format(e=email, b=brand))
-  resp = str(input("Is this correct? [y/n] : "))
-
-  #) Handle Response...
-  if ( resp == 'y' ): 
-    print("Thank you. Continuing...\n")
-    break
-  elif ( resp == 'n' ): 
-    print("Sorry, please try again.\n")
-    continue
-  else:
-    print("Sorry, invalid response. Please resubmit input.\n")
-    continue
+# TODO: Add Text Fields to Take in email and brand name
     
 ###################################################################
 
