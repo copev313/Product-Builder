@@ -4,8 +4,8 @@ import pandas as pd
 import sys
 
 import formatter as form
-import shopify.shopify_builder
-import etsy.etsy_builder
+#import shopify.shopify_builder
+#import etsy.etsy_builder
 
 ###############################################################
 
@@ -19,6 +19,8 @@ def build(build_type=''):
 
 
 # -- CATCH: Bad Headers
+
+"""
 try:
   #) Number of Rows Based on Rows Containing SKUs
   NUM_ROWS = len( df['Handle'] )
@@ -30,18 +32,15 @@ except KeyError:
         "\n\t\t+++ 'Image Src'\n\t\t+++ 'Variant Grams'\n " )
   sys.exit(0)
 
+"""
 
 # Save Some Columns That Require Formatting
 sku = form.format_skus( df['Handle'], name ) # TODO: Fix SKU func
 enabled = form.drop_down_named( name, 'no' )
 weight = form.grams_to_pounds( grams )
-###price = # NEEDS SPECIAL FUNCTION...
+price = form.format_price( name, varPrice )
 
 #################################################################
-
-# TODO: Add Text Fields to Take in email and brand name
-    
-###################################################################
 
 # Continue Once Confirmed..
 vendor = form.drop_down( email, NUM_ROWS )
@@ -53,7 +52,7 @@ meta = form.format_meta( name, brand )
 formatted_df = pd.DataFrame({ 'sku': sku,
                               'name_en': name,
                               'description_en': desc,
-                              #"price": price,
+                              'price': price,
                               'vendor': vendor,
                               'categories': cat,
                               'metaTitle_en': meta,
@@ -64,3 +63,5 @@ formatted_df = pd.DataFrame({ 'sku': sku,
                               'images': imgs
                             })
 
+test_df = formatted_df[['sku', 'name_en', 'price', 'variantPrice']]
+print(test_df)

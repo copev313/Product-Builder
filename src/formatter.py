@@ -75,10 +75,21 @@ def format_meta(name_col, brand):
   meta_list = []
   bool_array = pd.isnull(name_col)
   for i, name in enumerate(list(name_col)):
-    if (bool_array[i]):  # CASE: Name is empty
+    if (bool_array[i]):   # CASE: Name is empty
       meta_list.append(np.nan)
-    else:  # CASE: Name has a value
+    else:                 # CASE: Name has a value
       metatitle = "Wholesale {name} | {brand}".format(name=name, brand=brand)
       meta_list.append(metatitle)
   return pd.Series(meta_list)
 
+
+
+def format_price(name_col, vprice_col):
+  price_list = []
+  bool_array = pd.isnull(name_col)
+  for i, price in enumerate(list(name_col)):
+    if (bool_array[i]):   # CASE: Name is empty
+      price_list.append(np.nan)
+    else:                 # CASE: Name has value
+      price_list.append(price)
+  return pd.Series(price_list)
