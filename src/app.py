@@ -3,15 +3,21 @@
 import pandas as pd
 import tkinter as tk
 import tkinter.ttk as ttk
-import re
 from tkinter import messagebox, filedialog
 
-filepath = ''
-buildtype = ''
-notepad = {}
+import validation
+from builder.shopify import shopify_builder
+from builder.etsy import etsy_builder
+
+
+FILEPATH = ''
+STICKY_NOTE = None
+QED = None
 
 # Styling Constants
 ICON_LOC = './icon.png'
+WINDOW_TITLE = "Product Builder (v.0.1.3)"
+WINDOW_DIMENSIONS = '320x225'
 BTN_PADDING = 5
 BTN_BORDER = 4
 BTN_FONT_FAMILY = 'Segoe UI'
@@ -20,14 +26,14 @@ COMBOBOX_WIDTH = 18
 # * * * * * * * * * * * * * * * * * #
 
 # Create Window
-root = tk.Tk()
-root.geometry('320x225')
-root.title("Product Builder (v.0.1.3)")
-root.iconphoto(False, tk.PhotoImage(file=ICON_LOC))
+ROOT = tk.Tk()
+ROOT.geometry(WINDOW_DIMENSIONS)
+ROOT.title(WINDOW_TITLE)
+ROOT.iconphoto(False, tk.PhotoImage(file=ICON_LOC))
 
 
 # Create Tabs
-tabControl = ttk.Notebook(root)
+tabControl = ttk.Notebook(ROOT)
 tab1 = ttk.Frame(tabControl)
 tab2 = ttk.Frame(tabControl)
 tab3 = ttk.Frame(tabControl)
@@ -53,71 +59,89 @@ vendor_email_field = tk.Entry( tab2, width=ENTRY_WIDTH, textvariable=vendor_emai
 
 # Select CSV Event:
 def select_csv():
+        
     try: 
         # Save the Name of CSV Filepath to Create a DataFrame
-        global filepath
-        filepath = filedialog.askopenfilename(  initialdir = '/Desktop', 
+        global FILEPATH
+        FILEPATH = filedialog.askopenfilename(  initialdir = '/Desktop', 
                                                 title = 'Select a CSV file', 
                                                 filetypes = (('csv file','*.csv'), ('csv file','*.csv'))) 
-        print(filepath)
-        df = pd.read_csv(filepath)
+        print("FILEPATH: " + FILEPATH)
+        df = pd.read_csv(FILEPATH)
+        
+        # Validate Headers
+        returned_tuple = validation.validate_headers(df)
+        
+        # CASE: Missing Necessary Headers
+        if( not returned_tuple[0] ):
+            messagebox.showerror("CSV Format Error", "The CSV file does not contain all of the required column headers.")
 
         # CASE: Empty DataFrame
-        if(len(df) == 0):                
+        elif( len(df) == 0 ):                
             messagebox.showwarning('Problemo!', 'The selected CSV has no rows.')
-            
+        
+        # CASE: ...or else
         else: 
             pass    
         
     # CATCH: Invalid Filepath
     except FileNotFoundError as err: 
-        messagebox.showerror('Error in opening file!', err )
+        messagebox.showerror('Error in opening file!', err)
+        
+    # CATCH: Empty Data Error
+    except pd.errors.EmptyDataError as err:
+        messagebox.showwarning('Error validating file!', err)
+        
 
 
 # Submit Input Event
 def submit_input():
-    global buildtype
+    global FILEPATH
     brand = brand_name_var.get().strip()
     email = vendor_email_var.get().strip()
     buildtype = build_var.get()
     
-    def return_input(brand='', email='', buildtype='', filepath=''):
-        notepad = {'brand':brand, 'email':email, 'buildtype':buildtype, 'filepath':filepath}
-    
-    def check_email(email=''):
-        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-        return True if re.search(regex, email) else False
-    
+    df = pd.read_csv(FILEPATH)
+    returned_tuple = validation.validate_headers(df)
     
     # CASE: No CSV Path Selected
-    if(filepath == ""):
-        messagebox.showwarning("More Info Required", "No CSV file path selected.")
+    if(FILEPATH == ""):
+        messagebox.showwarning("Warning -- More Info Required", "No CSV file path selected.")
     
     # CASE: Empty Brand Name
     elif(brand == ""):
-        messagebox.showwarning("More Info Required", "No brand name specified.")
+        messagebox.showwarning("Warning -- More Info Required", "No brand name specified.")
     
     # CASE: Email Invalid
-    elif( not check_email(email) ):    
-        messagebox.showwarning("Input Validation", "The email address entered is invalid.")
+    elif( not validation.check_email(email) ):    
+        messagebox.showwarning("Warning -- Info Validation", "The email address entered is invalid.")
     
-    # CASE: Looks good...    
+    # CASE: Missing Headers
+    elif( not returned_tuple[0] ):
+            messagebox.showerror("CSV Format Error", "The CSV file selected does not contain all of the required column headers.")
+    # CASE: Empty DataFrame        
+    elif(len(df) == 0):
+        messagebox.showwarning('Problemo!', 'The selected CSV has no rows.')
+    
+    # CASE: Looks Good...    
     else:
         # Confirm Input
         confirm_info = messagebox.askyesno('Confirmation', 
-                                           'Is the following info correct?\n\n'+
-                                           'Brand Name:  {}\n'.format(brand)+
-                                           'Vendor Email:  {}\n'.format(email)+
-                                           'Build Type:  {}\n\n'.format(buildtype)+
-                                           'File Path: {}'.format(filepath)
+                                           'Is the following info correct?\n\n' +
+                                           'Brand Name:  {}\n'.format(brand) +
+                                           'Vendor Email:  {}\n'.format(email) +
+                                           'Build Type:  {}\n\n'.format(buildtype) +
+                                           'File Path: {}'.format(FILEPATH)
                                         )
         # YES -- 
         if(confirm_info):
-            global notepad
             messagebox.showinfo('Complete', 'Information Submitted!')
-            brand_name_var.set('submitted')     
-            vendor_email_var.set('submitted')
-            notepad = return_input(brand, email, buildtype, filepath)
+            brand_name_var.set('')     
+            vendor_email_var.set('')
+            
+            # Store Important Info to Send to Builder
+            global STICKY_NOTE
+            STICKY_NOTE = validation.sticky_note(brand, email, buildtype, FILEPATH)
         
         # NO --
         else:
@@ -127,26 +151,65 @@ def submit_input():
 
 # Convert CSV Event:
 def convert_csv():
-    global notepad
-    # Input Confirmed and Submitted
-    if(notepad != {}):
-        confirm_convert = messagebox.askokcancel('Confirmation', 'Are you sure you would like to proceed.')
+    global STICKY_NOTE
+    
+    # CASE: Input Confirmed and Submitted
+    if(STICKY_NOTE != None):
+        confirm_convert = messagebox.askokcancel('Confirmation', 'Are you sure you would like to proceed?')
     
         # YES --
-        if(confirm_convert): pass #maybe have a loading screen
-        
+        if(confirm_convert): 
+            build_type = STICKY_NOTE["BUILDTYPE"]
+            print("Conversion Confirmed!")
+            global QED
+            
+            # CASE: Shopify Build
+            if(build_type == 'Shopify'):
+                QED = shopify_builder(STICKY_NOTE)
+                
+            # CASE: Etsy Build
+            elif(build_type == 'Etsy'):
+                QED = etsy_builder(STICKY_NOTE)
+                
+            # CASE: ...or else
+            else:
+                QED = pd.DataFrame(STICKY_NOTE)
+            
+            messagebox.showinfo('Complete!', 'The CSV has been converted and is ready to export.')
+                
         # NO --
         else:
-            messagebox.showinfo('Confirmation', 'Cancelled')
-        
+            messagebox.showinfo('Confirmation', 'Process cancelled')
+            
+    # CASE: Step 2 Not Confirmed    
     else:
         messagebox.showwarning('More Info Required', 'Please confirm and submit the information in Step 2.')
         
     
 # Export CSV Event:      
-def export_csv(df):
-    export_path = filedialog.asksaveasfilename(defaultextention='.csv')
-    df.to_csv( export_path, index=False, header=True )
+def export_csv():
+    global QED
+    
+    if(QED["MASTER IMPORT"].empty):
+        messagebox.showwarning('Warning -- Conversion Not Complete', 'Please convert the CSV to export the resulting file.')
+    
+    else: 
+        
+        try:
+            # TODO: Create Directory to Store CSVs in
+            export_path = filedialog.asksaveasfilename( title= "Export Location",
+                                                        initialdir= "/Desktop", 
+                                                        filetypes= (('csv file','*.csv'), ('csv file','*.csv')),
+                                                        defaultextension= ".csv"
+                                                    )
+            QED["MASTER IMPORT"].to_csv(export_path, index=False, header=True)
+            #QED["SKU KEY"].to_csv(export_path, index=False, header=True)
+            #QED["IMAGE IMPORT"].to_csv(export_path, index=False, header=True)
+            
+            ### TODO: Add 'products - (brandname)' as filename
+            
+        except FileNotFoundError as err:
+            messagebox.showerror('Error!', err)
 
 
 # * * * * * * * * * * * * * * * * * #
@@ -195,13 +258,20 @@ export_btn = tk.Button( tab3,
 
 # Dropdown Menu
 build_var = tk.StringVar()
-bvalues = [ 'Shopify', 'Etsy', 'Wix', 'Square', 'WooCommerce', 'BigCommerce']
+bvalues = [ 'Shopify', 
+            #'Etsy', 
+            #'Wix', 
+            #'Square', 
+            #'WooCommerce', 
+            #'BigCommerce' 
+            ]
+
 build_combobox = ttk.Combobox(  tab2,
                                 width=COMBOBOX_WIDTH, 
                                 values=bvalues,
                                 textvariable=build_var,
                                 state='readonly'
-                                )
+                            )
 
 
 # * * * | | * * *  POSITION WIDGETS  * * * | | * * * #
@@ -225,10 +295,10 @@ build_combobox.current(0)   # sets default selection
 
 submit_btn.grid( row=4, column=1, padx=70, pady=8, sticky=tk.W )
 
-
 # TAB3
 convert_btn.grid( row=0, column=0, padx=90, pady=35 )
 export_btn.grid( row=1, column=0, padx=90, pady=0 )
 
 
-root.mainloop()
+# Infinite GUI Loop
+ROOT.mainloop()

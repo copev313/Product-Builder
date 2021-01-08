@@ -87,9 +87,11 @@ def format_meta(name_col, brand):
 def format_price(name_col, vprice_col):
   price_list = []
   bool_array = pd.isnull(name_col)
-  for i, price in enumerate(list(name_col)):
+  for i, price in enumerate(list(vprice_col)):
     if (bool_array[i]):   # CASE: Name is empty
       price_list.append(np.nan)
     else:                 # CASE: Name has value
       price_list.append(price)
   return pd.Series(price_list)
+
+
