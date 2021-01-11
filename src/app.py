@@ -1,5 +1,7 @@
 # app.py
 
+# * * * * * * * * * *  IMPORTS  * * * * * * * * * * * * * * 
+import os
 import pandas as pd
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -10,11 +12,13 @@ from builder.shopify import shopify_builder
 from builder.etsy import etsy_builder
 
 
+# * * * * * * * *  GLOBAL VARIABLES  * * * * * * * * * * * * * 
 FILEPATH = ''
 STICKY_NOTE = None
 QED = None
 
-# Styling Constants
+
+# * * * * * * * *  STYLING CONSTANTS  * * * * * * * * * * * * *
 ICON_LOC = './icon.png'
 WINDOW_TITLE = "Product Builder (v.0.1.3)"
 WINDOW_DIMENSIONS = '320x225'
@@ -23,16 +27,18 @@ BTN_BORDER = 4
 BTN_FONT_FAMILY = 'Segoe UI'
 ENTRY_WIDTH = 35
 COMBOBOX_WIDTH = 18
-# * * * * * * * * * * * * * * * * * #
 
-# Create Window
+
+# * * * * * * * *  CREATE UI OBJECTS  * * * * * * * * * * * * * 
+
+# Window
 ROOT = tk.Tk()
 ROOT.geometry(WINDOW_DIMENSIONS)
 ROOT.title(WINDOW_TITLE)
 ROOT.iconphoto(False, tk.PhotoImage(file=ICON_LOC))
 
 
-# Create Tabs
+# Tabs
 tabControl = ttk.Notebook(ROOT)
 tab1 = ttk.Frame(tabControl)
 tab2 = ttk.Frame(tabControl)
@@ -42,12 +48,12 @@ tabControl.add(tab2, text=' Step 2 ')
 tabControl.add(tab3, text=' Step 3 ')
 
 
-# Labels
+# Labels (TAB 2)
 build_label = tk.Label( tab2, text="Type: " )
 brand_label = tk.Label( tab2, text="Brand: ")
 vendor_label = tk.Label( tab2, text="Email: ")
 
-# Fields
+# Text Fields (TAB 2)
 brand_name_var = tk.StringVar(value="MY SOCKS")                     # Default Text Entry Values
 vendor_email_var = tk.StringVar(value="eatmysocks@yahoo.org")
 
@@ -55,9 +61,9 @@ brand_name_field = tk.Entry( tab2, width=ENTRY_WIDTH, textvariable=brand_name_va
 vendor_email_field = tk.Entry( tab2, width=ENTRY_WIDTH, textvariable=vendor_email_var )                               
 
 
-# * * * BUTTON COMMAND FUNCTIONS * * * #
+# * * * * * * * *  BUTTON FUNCTIONS  * * * * * * * * * * * * * 
 
-# Select CSV Event:
+# Select CSV Event (TAB 1):
 def select_csv():
         
     try: 
@@ -94,7 +100,7 @@ def select_csv():
         
 
 
-# Submit Input Event
+# Submit Input Event (TAB 2):
 def submit_input():
     global FILEPATH
     brand = brand_name_var.get().strip()
@@ -126,18 +132,19 @@ def submit_input():
     # CASE: Looks Good...    
     else:
         # Confirm Input
-        confirm_info = messagebox.askyesno('Confirmation', 
-                                           'Is the following info correct?\n\n' +
-                                           'Brand Name:  {}\n'.format(brand) +
-                                           'Vendor Email:  {}\n'.format(email) +
-                                           'Build Type:  {}\n\n'.format(buildtype) +
-                                           'File Path: {}'.format(FILEPATH)
+        confirm_info = messagebox.askyesno( 'Confirmation', 
+                                            'Is the following info correct?\n\n' +
+                                            'Brand Name:  {}\n'.format(brand) +
+                                            'Vendor Email:  {}\n'.format(email) +
+                                            'Build Type:  {}\n\n'.format(buildtype) +
+                                            'File Path: {}'.format(FILEPATH)
                                         )
         # YES -- 
         if(confirm_info):
             messagebox.showinfo('Complete', 'Information Submitted!')
             brand_name_var.set('')     
             vendor_email_var.set('')
+            print('Information Submitted!')                 # debug
             
             # Store Important Info to Send to Builder
             global STICKY_NOTE
@@ -149,7 +156,8 @@ def submit_input():
                                 'Please make the proper changes and try again.')
 
 
-# Convert CSV Event:
+
+# Convert CSV Event (TAB 3):
 def convert_csv():
     global STICKY_NOTE
     
@@ -175,44 +183,60 @@ def convert_csv():
             else:
                 QED = pd.DataFrame(STICKY_NOTE)
             
-            messagebox.showinfo('Complete!', 'The CSV has been converted and is ready to export.')
+            messagebox.showinfo('Complete!', 
+                                'The CSV has been converted and is ready to export.')
                 
         # NO --
         else:
-            messagebox.showinfo('Confirmation', 'Process cancelled')
+            messagebox.showinfo('Confirmation', 
+                                'Process cancelled')
             
     # CASE: Step 2 Not Confirmed    
     else:
-        messagebox.showwarning('More Info Required', 'Please confirm and submit the information in Step 2.')
+        messagebox.showwarning( 'More Info Required', 
+                                'Please confirm and submit the information in Step 2.')
         
     
-# Export CSV Event:      
+    
+# Export CSV Event (TAB 3):      
 def export_csv():
     global QED
+    global STICKY_NOTE
     
-    if(QED["MASTER IMPORT"].empty):
-        messagebox.showwarning('Warning -- Conversion Not Complete', 'Please convert the CSV to export the resulting file.')
+    # CASE: Cannot Export Yet...
+    if(QED == None):
+        messagebox.showwarning( 'Warning -- Conversion Not Complete', 
+                                'Please convert the CSV to export the resulting file.')
     
+    # CASE: Converted and Ready to Export
     else: 
+        brandname = STICKY_NOTE["BRAND"]
+        currentuser = os.path.expanduser("~")
+        dir_name = r"{cu}\Downloads\{bn}".format(cu=currentuser, bn=brandname)
         
+        # TRY: Making Directory
         try:
-            # TODO: Create Directory to Store CSVs in
-            export_path = filedialog.asksaveasfilename( title= "Export Location",
-                                                        initialdir= "/Desktop", 
-                                                        filetypes= (('csv file','*.csv'), ('csv file','*.csv')),
-                                                        defaultextension= ".csv"
-                                                    )
-            QED["MASTER IMPORT"].to_csv(export_path, index=False, header=True)
-            #QED["SKU KEY"].to_csv(export_path, index=False, header=True)
-            #QED["IMAGE IMPORT"].to_csv(export_path, index=False, header=True)
+            os.mkdir(dir_name, mode=0o666)                  # this mode allows read/write file operations within the created directory
+            print("Created directory: " + dir_name)
             
-            ### TODO: Add 'products - (brandname)' as filename
+        # CATCH: FileExistsError If Directory Already Exists 
+        except FileExistsError as err:
+            print(err)          # debug
+            messagebox.showerror(   'Error -- Directory Already Exists', 
+                                    'It seems this file already exists in Downloads.' )
             
+        # TRY: Storing Formatted CSVs
+        try:   
+            for key, value in QED.items():
+                pathway = "{dn}\products - {bn} - {k}.csv".format(dn=dir_name, bn=brandname, k=key)
+                #pathway = dir_name + '\products - ' + str(brandname) + ' | ' + str(key)
+                value.to_csv(pathway, header=True, index=False)
+                
         except FileNotFoundError as err:
             messagebox.showerror('Error!', err)
 
 
-# * * * * * * * * * * * * * * * * * #
+# * * * * * * *  CREATE BUTTON & DROPDOWN OBJECTS  * * * * * * * * * * * * 
 
 # Buttons
 choose_csv_btn = tk.Button( tab1,
@@ -255,7 +279,6 @@ export_btn = tk.Button( tab3,
                         bd=BTN_BORDER
                         )
 
-
 # Dropdown Menu
 build_var = tk.StringVar()
 bvalues = [ 'Shopify', 
@@ -274,7 +297,7 @@ build_combobox = ttk.Combobox(  tab2,
                             )
 
 
-# * * * | | * * *  POSITION WIDGETS  * * * | | * * * #
+# * * * * * * *  LAYOUT WIDGETS / UI COMPONENTS  * * * * * * * * * *
 
 # TAB BAR
 tabControl.grid( row=0, column=0, pady=5, padx=5, sticky=tk.W )
@@ -291,7 +314,7 @@ vendor_email_field.grid( row=2, column=1, padx=5, pady=5 )
 
 build_label.grid( row=3, column=0, padx=5, pady=15 )
 build_combobox.grid( row=3, column=1, padx=5, pady=15, sticky=tk.W )
-build_combobox.current(0)   # sets default selection
+build_combobox.current(0)       # sets default selection
 
 submit_btn.grid( row=4, column=1, padx=70, pady=8, sticky=tk.W )
 
@@ -300,5 +323,5 @@ convert_btn.grid( row=0, column=0, padx=90, pady=35 )
 export_btn.grid( row=1, column=0, padx=90, pady=0 )
 
 
-# Infinite GUI Loop
+# Infinite Window Loop
 ROOT.mainloop()
