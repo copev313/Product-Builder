@@ -233,3 +233,16 @@ def format_varprice(vprice_col):
   return pd.Series(formatted_list)
 
 
+
+def trim_empty(df, ref_col):
+  bool_array = pd.isnull(ref_col)     # boolean array - True when value is empty
+  index_list = []                     # store a list of indices with an empty value
+  for index, value in enumerate(df):
+    # CASE: empty value
+    if (bool_array[i]):
+      index_list.append(i)
+    else:
+      pass
+    
+  return df.drop(index=index_list, axis=0)
+

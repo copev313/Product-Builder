@@ -11,12 +11,10 @@ import validation
 from builder.shopify import shopify_builder
 from builder.etsy import etsy_builder
 
-
 # * * * * * * * *  GLOBAL VARIABLES  * * * * * * * * * * * * * 
 FILEPATH = ''
 STICKY_NOTE = None
 QED = None
-
 
 # * * * * * * * *  STYLING CONSTANTS  * * * * * * * * * * * * *
 ICON_LOC = './icon.png'
@@ -28,7 +26,6 @@ BTN_FONT_FAMILY = 'Segoe UI'
 ENTRY_WIDTH = 35
 COMBOBOX_WIDTH = 18
 
-
 # * * * * * * * *  CREATE UI OBJECTS  * * * * * * * * * * * * * 
 
 # Window
@@ -36,7 +33,6 @@ ROOT = tk.Tk()
 ROOT.geometry(WINDOW_DIMENSIONS)
 ROOT.title(WINDOW_TITLE)
 ROOT.iconphoto(False, tk.PhotoImage(file=ICON_LOC))
-
 
 # Tabs
 tabControl = ttk.Notebook(ROOT)
@@ -46,7 +42,6 @@ tab3 = ttk.Frame(tabControl)
 tabControl.add(tab1, text=' Step 1 ')
 tabControl.add(tab2, text=' Step 2 ')
 tabControl.add(tab3, text=' Step 3 ')
-
 
 # Labels (TAB 2)
 build_label = tk.Label( tab2, text="Type: " )
@@ -59,7 +54,6 @@ vendor_email_var = tk.StringVar(value="eatmysocks@yahoo.org")
 
 brand_name_field = tk.Entry( tab2, width=ENTRY_WIDTH, textvariable=brand_name_var )
 vendor_email_field = tk.Entry( tab2, width=ENTRY_WIDTH, textvariable=vendor_email_var )                               
-
 
 # * * * * * * * *  BUTTON FUNCTIONS  * * * * * * * * * * * * * 
 
@@ -98,7 +92,6 @@ def select_csv():
     except pd.errors.EmptyDataError as err:
         messagebox.showwarning('Error validating file!', err)
         
-
 
 # Submit Input Event (TAB 2):
 def submit_input():
@@ -156,7 +149,6 @@ def submit_input():
                                 'Please make the proper changes and try again.')
 
 
-
 # Convert CSV Event (TAB 3):
 def convert_csv():
     global STICKY_NOTE
@@ -185,6 +177,7 @@ def convert_csv():
             
             messagebox.showinfo('Complete!', 
                                 'The CSV has been converted and is ready to export.')
+            # TODO: Add Stat Information to Message
                 
         # NO --
         else:
@@ -196,7 +189,6 @@ def convert_csv():
         messagebox.showwarning( 'More Info Required', 
                                 'Please confirm and submit the information in Step 2.')
         
-    
     
 # Export CSV Event (TAB 3):      
 def export_csv():
@@ -211,30 +203,17 @@ def export_csv():
     # CASE: Converted and Ready to Export
     else: 
         brandname = STICKY_NOTE["BRAND"]
-        currentuser = os.path.expanduser("~")
-        dir_name = r"{cu}\Downloads\{bn}".format(cu=currentuser, bn=brandname)
         
-        # TRY: Making Directory
-        try:
-            os.mkdir(dir_name, mode=0o666)                  # this mode allows read/write file operations within the created directory
-            print("Created directory: " + dir_name)
-            
-        # CATCH: FileExistsError If Directory Already Exists 
-        except FileExistsError as err:
-            print(err)          # debug
-            messagebox.showerror(   'Error -- Directory Already Exists', 
-                                    'It seems this file already exists in Downloads.' )
-            
-        # TRY: Storing Formatted CSVs
-        try:   
-            for key, value in QED.items():
-                pathway = "{dn}\products - {bn} - {k}.csv".format(dn=dir_name, bn=brandname, k=key)
-                #pathway = dir_name + '\products - ' + str(brandname) + ' | ' + str(key)
-                value.to_csv(pathway, header=True, index=False)
-                
-        except FileNotFoundError as err:
-            messagebox.showerror('Error!', err)
+        # Create Folder & Store Path
+        fold_loc = validation.create_brand_folder(brandname=brandname)    
+        
+        # Store CSVs in the Folder
+        validation.store_csvs(brandname=brandname, folder_location=fold_loc, dict_of_df=QED)
 
+        # Message Folder Name
+        messagebox.showinfo(    "Finished!",
+                                "The CSVs have been stored at:\n{fl}".format(fl=fold_loc)
+                            )   
 
 # * * * * * * *  CREATE BUTTON & DROPDOWN OBJECTS  * * * * * * * * * * * * 
 
@@ -287,7 +266,7 @@ bvalues = [ 'Shopify',
             #'Square', 
             #'WooCommerce', 
             #'BigCommerce' 
-            ]
+        ]
 
 build_combobox = ttk.Combobox(  tab2,
                                 width=COMBOBOX_WIDTH, 
@@ -321,7 +300,6 @@ submit_btn.grid( row=4, column=1, padx=70, pady=8, sticky=tk.W )
 # TAB3
 convert_btn.grid( row=0, column=0, padx=90, pady=35 )
 export_btn.grid( row=1, column=0, padx=90, pady=0 )
-
 
 # Infinite Window Loop
 ROOT.mainloop()

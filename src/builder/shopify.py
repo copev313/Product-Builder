@@ -86,17 +86,20 @@ def shopify_builder(sticky_note):
                                     'images': imgs 
                                 })
     
-    image_import_df = pd.DataFrame({ })
+    # Trim Rows w/o a Name Value
+    names_only = frm.trim_empty(image_key_df, name)
     
-    defaults_df = pd.DataFrame({ })
+    # Now Trim Rows w/o an Image Value
+    image_import_df = frm.trim_empty(names_only, imgs)
     
-    variants_df = pd.DataFrame({ })
+    #defaults_df = pd.DataFrame({ })
+    #variants_df = pd.DataFrame({ })
     
     # TODO: Add Defaults & Variants Sheet
     return {    "MASTER IMPORT": master_import_df, 
                 "SKU KEY": sku_key_df, 
                 "IMAGE KEY": image_key_df,
-                #"IMAGE IMPORT": image_import_df,
+                "IMAGE IMPORT": image_import_df,
                 #"DEFAULTS": defaults_df,
                 #"VARIANTS": variants_df
             } 

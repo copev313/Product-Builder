@@ -61,8 +61,8 @@ def check_email(email=''):
     """
     regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
     return True if re.search(regex, email) else False
-    
-    
+
+
 
 def sticky_note(brand='', email='', buildtype='', filepath=''):
     """
@@ -86,5 +86,83 @@ def sticky_note(brand='', email='', buildtype='', filepath=''):
     """
     note = { 'BRAND':brand, 'EMAIL':email, 'BUILDTYPE':buildtype, 'FILEPATH':filepath }
     return note
+
+
+
+def create_brand_folder(brandname='', mainfolder='Downloads'):
+    """
+    Creates a directory in 'mainfolder' of the users folder named 'brandname'.
     
+
+    Parameters
+    ----------
+    brandname : str, optional
+        The brand name, by default ''
+    mainfolder : str, optional
+        The main folder in the user's directory to create the folder, by default 'Downloads'
+
+    Returns
+    -------
+    directory_location: str
+        The path where the directory was created.
+    """
+    # "C:Users/{username}"
+    currentuser = os.path.expanduser("~")        
     
+    # Default Directory Location   
+    directory_location = "{cu}\{mf}\{bn}".format(   cu=currentuser,
+                                                    mf=mainfolder,
+                                                    bn=brandname
+                                                )
+    
+    # Returns bool - Whether The Folder Exists Already in the Given Location
+    folder_exists = os.path.isdir(directory_location)
+    
+    # Iterator used to make name unique
+    i = 1           
+    
+    # Handle Naming in Case of FileExistsError
+    while folder_exists:
+        # Alter the Name with Iterating Number
+        directory_location = directory_location + " ({int})".format(int=i)
+        folder_exists = os.path.isdir(directory_location)
+        i += 1
+    
+    # Create Directory       
+    try:
+        os.mkdir(directory_location, mode=0o666)                        # this mode allows read/write file operations within the created directory
+        print("Successfully created directory: " + directory_location)            # debug
+        
+    except FileExistsError as err:
+        print("Error! This folder seems to already exist in: Downloads.")
+    
+    return directory_location
+
+
+
+def store_csvs(brandname, folder_location, dict_of_df):
+    """
+    Stores DataFrame values from a dictionary as CSV files in a folder at 'folder_location'.
+
+    Parameters
+    ----------
+    brandname : str
+        The brand name.
+    folder_location : str
+        The path to the folder's location
+    dict_of_df : dict (of the form: { str: pandas.DataFrame })
+        A dictionary storing formatted DataFrames.
+    """
+    # Store each DataFrame as CSV in the folder
+    try:
+        for key, value in dict_of_df.items():
+            pathway = "{fl}\products - {bn} - {k}.csv".format(  fl=folder_location,
+                                                                bn=brandname,
+                                                                k=key
+                                                            )
+            value.to_csv(pathway, header=True, index=False)
+        
+    except FileNotFoundError as err:
+        print("Error! " + err)
+
+
