@@ -1,3 +1,4 @@
-__pycache__
-*.pyc
-tests
+/.vscode
+/src/__pycache__
+/tests
+/src/builder/__pycache__
