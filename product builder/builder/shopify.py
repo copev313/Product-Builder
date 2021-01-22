@@ -1,7 +1,10 @@
 # shopify.py
 
 import pandas as pd
-import formatter as frm
+
+from utils import formatter as frm
+
+# - - - - - - - - - - - - - - - - - - - -
 
 
 def shopify_builder(sticky_note):

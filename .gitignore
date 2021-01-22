@@ -1,4 +1,2 @@
 /.vscode
-/src/__pycache__
-/tests
-/src/builder/__pycache__
+/product builder/tests

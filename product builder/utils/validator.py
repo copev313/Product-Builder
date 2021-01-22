@@ -77,11 +77,13 @@ def sticky_note(brand='', email='', buildtype='', filepath=''):
     brand : str, optional
         The brand name, by default ''
     email : str, optional
-        The vendor's email address (associated with their account), by default ''
+        The vendor's email address (associated with their account),
+        by default ''.
     buildtype : str, optional
         The type of product CSV provided, by default ''
     filepath : str, optional
-        The filepath of the CSV being referenced to create the product build, by default ''
+        The filepath of the CSV being referenced to create the product build,
+        by default ''.
 
     Returns
     -------
@@ -94,14 +96,15 @@ def sticky_note(brand='', email='', buildtype='', filepath=''):
 
 def create_brand_folder(brandname='', mainfolder='Downloads'):
     """
-    Creates a directory in 'mainfolder' of the users folder named 'brandname'.
+    Creates a directory in 'mainfolder' of the users folder
+    named 'brandname'.
 
     Parameters
     ----------
     brandname : str, optional
         The brand name, by default ''
     mainfolder : str, optional
-        The main folder in the user's directory to create the folder, 
+        The main folder in the user's directory to create the folder,
         by default 'Downloads'.
 
     Returns
@@ -115,7 +118,6 @@ def create_brand_folder(brandname='', mainfolder='Downloads'):
     directory_location = "{cu}\{mf}\{bn}".format(cu=currentuser,
                                                  mf=mainfolder,
                                                  bn=brandname)
-
     # Returns bool - Whether The Folder Exists Already in the Given Location
     folder_exists = os.path.isdir(directory_location)
     # Iterator used to make name unique
