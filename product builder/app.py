@@ -5,9 +5,9 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox, filedialog
 
-from utils import validation
+from utils import validator as validation
 from builder.shopify import shopify_builder
-from builder.etsy import etsy_builder
+# from builder.etsy import etsy_builder
 
 # * * * * * * * *  GLOBAL VARIABLES  * * * * * * * * * * * * *
 FILEPATH = ''
@@ -15,8 +15,8 @@ STICKY_NOTE = None
 QED = None
 
 # * * * * * * * *  STYLING CONSTANTS  * * * * * * * * * * * * *
-ICON_LOC = './icon.png'
-WINDOW_TITLE = "Product Builder (v.0.1.3)"
+ICON_LOC = 'icon.png'
+WINDOW_TITLE = "Product Builder  (Alpha 1)"
 WINDOW_DIMENSIONS = '320x225'
 BTN_PADDING = 5
 BTN_BORDER = 4
@@ -37,9 +37,9 @@ tabControl = ttk.Notebook(ROOT)
 tab1 = ttk.Frame(tabControl)
 tab2 = ttk.Frame(tabControl)
 tab3 = ttk.Frame(tabControl)
-tabControl.add(tab1, text=' Step 1 ')
-tabControl.add(tab2, text=' Step 2 ')
-tabControl.add(tab3, text=' Step 3 ')
+tabControl.add(tab1, text='  Step 1  ')
+tabControl.add(tab2, text='  Step 2  ')
+tabControl.add(tab3, text='  Step 3  ')
 
 # Labels (TAB 2):
 build_label = tk.Label(tab2, text="Type: ")
@@ -48,8 +48,8 @@ vendor_label = tk.Label(tab2, text="Email: ")
 
 # Text Fields (TAB 2):
 # Default Text Entry Values
-brand_name_var = tk.StringVar(value="MY SOCKS")
-vendor_email_var = tk.StringVar(value="eatmysocks@yahoo.org")
+brand_name_var = tk.StringVar(value="MY SOCKIES")
+vendor_email_var = tk.StringVar(value="eatmyshorts@yoohoo.org")
 
 brand_name_field = tk.Entry(tab2,
                             width=ENTRY_WIDTH,
@@ -70,7 +70,6 @@ def select_csv():
         FILEPATH = filedialog.askopenfilename(initialdir='/Desktop',
                                               title='Select a CSV file',
                                               filetypes=filetypes)
-        print("FILEPATH: " + FILEPATH)
         df = pd.read_csv(FILEPATH)
 
         # Validate Headers
@@ -78,8 +77,13 @@ def select_csv():
 
         # CASE: Missing Necessary Headers
         if(not returned_tuple[0]):
+            missing_list = returned_tuple[1]
+            slip = ''
+            for x in missing_list:
+                slip += "+ {}\n".format(x)
             messagebox.showerror("CSV Format Error",
-                                 "The CSV is missing required headers.")
+                                 "The CSV selected is missing the following " +
+                                 "required header(s):\n\n" + slip)
         # CASE: Empty DataFrame
         elif(len(df) == 0):
             messagebox.showwarning('Problemo!',
@@ -88,13 +92,14 @@ def select_csv():
         else:
             pass
 
-    # CATCH: Invalid Filepath
-    except FileNotFoundError as err:
-        messagebox.showerror('Error in opening file!', err)
-
-    # CATCH: Empty Data Error
-    except pd.errors.EmptyDataError as err:
-        messagebox.showwarning('Error validating file!', err)
+    # CATCH: Invalid Filepath--
+    except FileNotFoundError as e:
+        messagebox.showerror('Error in opening file!',
+                             "Select a valid CSV file to continue.\n\n"
+                             + str(e).replace('[Errno 2]', 'ERR:'))
+    # CATCH: Empty Data Error--
+    except pd.errors.EmptyDataError as e:
+        messagebox.showwarning('Empty Data Error!', e)
 
 
 # Submit Input Event (TAB 2):
@@ -104,15 +109,19 @@ def submit_input():
     email = vendor_email_var.get().strip()
     buildtype = build_var.get()
 
-    df = pd.read_csv(FILEPATH)
-    returned_tuple = validation.validate_headers(df)
+    try:
+        df = pd.read_csv(FILEPATH)
+        returned_tuple = validation.validate_headers(df)
 
-    # CASE: No CSV Path Selected
-    if(FILEPATH == ""):
-        messagebox.showwarning("Warning -- More Info Required",
-                               "No CSV file path selected.")
+    except FileNotFoundError as err:
+        messagebox.showwarning("Warning -- File Not Found",
+                               "Please select a CSV file in Step 1.\n\n" +
+                               str(err).replace('[Errno 2]', 'ERR:'))
+        # End process
+        return
+
     # CASE: Empty Brand Name
-    elif(brand == ""):
+    if(brand == ""):
         messagebox.showwarning("Warning -- More Info Required",
                                "No brand name specified.")
     # CASE: Email Invalid
@@ -130,11 +139,11 @@ def submit_input():
     else:
         # Confirm Input
         confirm = messagebox.askyesno('Confirmation',
-                                      'Is the following info correct?\n\n' +
-                                      'Brand Name:  {}\n' + str(brand) +
-                                      'Vendor Email:  {}\n' + str(email) +
-                                      'Build Type:  {}\n\n' + str(buildtype) +
-                                      'File Path: {}' + str(FILEPATH)
+                                      'Is the following information correct?' +
+                                      '\n\nBrand Name:    ' + str(brand) +
+                                      '\nVendor Email:  ' + str(email) +
+                                      '\nBuild Type:       ' + str(buildtype) +
+                                      '\n\nFilepath:\n' + str(FILEPATH)
                                       )
         # YES --
         if(confirm):
@@ -161,10 +170,10 @@ def convert_csv():
     global STICKY_NOTE
     # CASE: Input Confirmed and Submitted
     if(STICKY_NOTE is not None):
-        confirm_convert = messagebox.askokcancel('Confirmation',
-                                                 'Would like to proceed?')
+        confirm_convert = messagebox.askyesno('Confirmation',
+                                              'Would like to proceed?')
         # YES --
-        if(confirm_convert):
+        if(confirm_convert is True):
             build_type = STICKY_NOTE["BUILDTYPE"]
             print("Conversion Confirmed!")
             global QED
@@ -173,8 +182,9 @@ def convert_csv():
             if(build_type == 'Shopify'):
                 QED = shopify_builder(STICKY_NOTE)
             # CASE: Etsy Build
-            elif(build_type == 'Etsy'):
-                QED = etsy_builder(STICKY_NOTE)
+            # elif(build_type == 'Etsy'):
+            #   QED = etsy_builder(STICKY_NOTE)
+
             # CASE: ...or else
             else:
                 QED = pd.DataFrame(STICKY_NOTE)
@@ -190,7 +200,8 @@ def convert_csv():
     # CASE: Step 2 Not Confirmed
     else:
         messagebox.showwarning('More Info Required',
-                               'Confirm and submit the information in Step 2.')
+                               'Confirm and submit the information in ' +
+                               'Step 2 to continue.')
 
 
 # Export CSV Event (TAB 3):
@@ -200,21 +211,23 @@ def export_csv():
 
     # CASE: Cannot Export Yet...
     if(QED is None):
-        messagebox.showwarning('Warning -- Conversion Not Complete',
-                               'Convert the CSV to export the file.')
+        messagebox.showwarning('Warning -- Conversion Not Complete!',
+                               'You must convert the CSV before you can '
+                               + 'export the files.')
     # CASE: Converted and Ready to Export
     else:
         brandname = STICKY_NOTE["BRAND"]
 
         # Create Folder & Store Path
-        fold_loc = validation.create_brand_folder(brandname=brandname)
+        folder_loc = validation.create_brand_folder(brandname=brandname)
         # Store CSVs in the Folder
         validation.store_csvs(brandname=brandname,
-                              folder_location=fold_loc,
+                              folder_loc=folder_loc,
                               dict_of_df=QED)
         # Message Folder Name
         messagebox.showinfo("Finished!",
-                            "Files have been stored at:\n" + str(fold_loc))
+                            "Files have been stored at:\n" +
+                            str(folder_loc))
 
 
 # * * * * * * *  CREATE BUTTON & DROPDOWN OBJECTS  * * * * * * * * * * * *
@@ -235,7 +248,7 @@ submit_btn = tk.Button(tab2,
                        bg='#19D5EE',       # light blue
                        font=(BTN_FONT_FAMILY, 10, 'bold'),
                        padx=BTN_PADDING,
-                       pady=BTN_PADDING,
+                       pady=1,
                        bd=BTN_BORDER
                        )
 
@@ -298,7 +311,7 @@ build_combobox.current(0)           # Sets default selection
 submit_btn.grid(row=4, column=1, padx=70, pady=8, sticky=tk.W)
 
 # TAB3
-convert_btn.grid(row=0, column=0, padx=90, pady=35)
+convert_btn.grid(row=0, column=0, padx=90, pady=30)
 export_btn.grid(row=1, column=0, padx=90, pady=0)
 
 # Infinite Window Loop:

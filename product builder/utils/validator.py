@@ -64,7 +64,7 @@ def check_email(email=''):
     __ : bool
         Returns True if the string was in an email format, otherwise False.
     """
-    regex = "^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$"
+    regex = r"^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$"
     return True if re.search(regex, email) else False
 
 

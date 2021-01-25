@@ -1,2 +1,5 @@
 /.vscode
 /product builder/tests
+/.pytest_cache
+/product builder/utils/__pycache__
+/product builder/builder/__pycache__

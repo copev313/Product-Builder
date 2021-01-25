@@ -19,7 +19,7 @@ def shopify_builder(sticky_note):
     Returns
     -------
     dict
-        A dictionary containing necessary CSV formats as values (ex: Master, 
+        A dictionary containing necessary CSV formats as values (ex: Master,
         Sku Key, Defaults, etc.)
     """
     # Extract Info From Sticky Note
@@ -34,14 +34,20 @@ def shopify_builder(sticky_note):
     name = df['Title']
     desc = df['Body (HTML)']
     # TODO: Format images to only contain one link, not a comma seperated list
-    imgs = df['Image Src']
+    imgs = frm.format_images(df['Image Src'])
     # TODO: Handle this steaming pile of garbage...
     opt1Name, opt1Val = df['Option1 Name'], df['Option1 Value']
     opt2Name, opt2Val = df['Option2 Name'], df['Option2 Value']
     opt3Name, opt3Val = df['Option3 Name'], df['Option3 Value']
 
     # COMING SOON: Inventory Tracking Columns . . .
+    '''
+    try:
+        variantQty = df['Variant Inventory Qty']
 
+    except:
+
+    '''
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     # Columns That Require Some Formatting

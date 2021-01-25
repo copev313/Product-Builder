@@ -176,9 +176,9 @@ def format_meta(name_col, brand):
     """
     meta_list = []
     bool_array = pd.isnull(name_col)
-    for i, name in enumerate(list(name_col)):
+    for i, name in enumerate(name_col):
         if (bool_array[i]):         # CASE: Name is empty.
-            meta_list.append(np.nan)
+            metatitle = np.nan
         else:                       # CASE: Name has a value.
             metatitle = "Wholesale {name} | {brand}".format(name=name,
                                                             brand=brand)
@@ -229,16 +229,50 @@ def format_varprice(vprice_col):
     pandas.Series
         The cleaned and formatted variantPrice column.
     """
-    formatted_list = []
-    for vp in vprice_col:
-        as_string = str(vp)
-        no_symbol = as_string.replace('$', "")
-        as_float = float(no_symbol)
-        formatted_list.append(as_float)
+    vp_list = []
+    for vp in list(vprice_col):
+        as_str = str(vp)                        # vprice to string
+        no_symbol = as_str.replace('$', "")     # remove any '$' signs
+        as_float = float(no_symbol)             # vprice back to float
+        two_dec = round(as_float, 2)            # include 2 decimal places
+        vp_list.append(two_dec)
+
+    return pd.Series(vp_list)
+
+
+def format_images(image_col):
+    """
+    Checks the Image Src column and removes any strings that come
+    in a comma seperated list, keeping only the first image link.
+
+    Parameters
+    ----------
+    image_col : pandas.Series
+        The image column to analyze.
+
+    Returns
+    -------
+    pandas.Series
+        The resulting Series with any additional links listed removed.
+    """
+    img_list = []
+    for img in list(image_col):
+        if (img):                           # CASE: Nonempty cell
+            if (',' in str(img)):           # CASE) Contains a comma
+                imgs_split = str(img).split(',', maxsplit=1)
+                img = imgs_split[0]
+            else:                           # CASE) Doesn't contain comma
+                img = str(img)
+        else:                               # CASE: Empty cell
+            pass                            # Leave blank
+
+        img_list.append(img)
+        formatted_list = ['' if x == 'nan' else x for x in img_list]
 
     return pd.Series(formatted_list)
 
 
+# UNDER CONSTRUCTION...
 def trim_empty(df, ref_col):
     # Boolean array - True when value is empty
     bool_array = pd.isnull(ref_col)
