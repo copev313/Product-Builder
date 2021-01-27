@@ -17,7 +17,7 @@ QED = None
 # * * * * * * * *  STYLING CONSTANTS  * * * * * * * * * * * * *
 ICON_LOC = 'icon.png'
 WINDOW_TITLE = "Product Builder  (Alpha 1)"
-WINDOW_DIMENSIONS = '320x225'
+WINDOW_DIMENSIONS = '320x218'
 BTN_PADDING = 5
 BTN_BORDER = 4
 BTN_FONT_FAMILY = 'Segoe UI'
@@ -49,7 +49,7 @@ vendor_label = tk.Label(tab2, text="Email: ")
 # Text Fields (TAB 2):
 # Default Text Entry Values
 brand_name_var = tk.StringVar(value="MY SOCKIES")
-vendor_email_var = tk.StringVar(value="eatmyshorts@yoohoo.org")
+vendor_email_var = tk.StringVar(value="eat.my.shorts@yoohoo.org")
 
 brand_name_field = tk.Entry(tab2,
                             width=ENTRY_WIDTH,
@@ -143,7 +143,7 @@ def submit_input():
                                       '\n\nBrand Name:    ' + str(brand) +
                                       '\nVendor Email:  ' + str(email) +
                                       '\nBuild Type:       ' + str(buildtype) +
-                                      '\n\nFilepath:\n' + str(FILEPATH)
+                                      "\n\nCSV's Filepath:\n" + str(FILEPATH)
                                       )
         # YES --
         if(confirm):
@@ -151,7 +151,7 @@ def submit_input():
             # Empty text fields.
             brand_name_var.set('')
             vendor_email_var.set('')
-            print('Information Submitted!')  # debug
+            print('DEBUG: Information Submitted!')  # debug
 
             # Store Important Info to Send to Builder
             global STICKY_NOTE
@@ -161,8 +161,8 @@ def submit_input():
                                                  FILEPATH)
         # NO --
         else:
-            messagebox.showinfo('Submission Cancelled',
-                                'Make changes and try again.')
+            messagebox.showinfo('Confirmation',
+                                'Process cancelled.')
 
 
 # Convert CSV Event (TAB 3):
@@ -175,7 +175,7 @@ def convert_csv():
         # YES --
         if(confirm_convert is True):
             build_type = STICKY_NOTE["BUILDTYPE"]
-            print("Conversion Confirmed!")
+            print("DEBUG: Conversion Confirmed for Takeoff!")  # debug
             global QED
 
             # CASE: Shopify Build
@@ -190,7 +190,13 @@ def convert_csv():
                 QED = pd.DataFrame(STICKY_NOTE)
 
             messagebox.showinfo('Complete!',
-                                'The CSV is converted and is ready to export.')
+                                "The CSV is converted and is ready " +
+                                "to export.\n\n[Statistics -- Coming Soon!]" +
+                                "\n\n • number_of_rows_processed" +
+                                "\n • execution_time_in_seconds" +
+                                "\n • num_defaults_and_variants_ratio" +
+                                "\n • number_of_option_columns_created"
+                                )
             # TODO: Add Stats Information to Message
 
         # NO --
@@ -306,7 +312,7 @@ vendor_email_field.grid(row=2, column=1, padx=5, pady=5)
 
 build_label.grid(row=3, column=0, padx=5, pady=15)
 build_combobox.grid(row=3, column=1, padx=5, pady=15, sticky=tk.W)
-build_combobox.current(0)           # Sets default selection
+build_combobox.current(0)       # Sets default selection to the first option
 
 submit_btn.grid(row=4, column=1, padx=70, pady=8, sticky=tk.W)
 

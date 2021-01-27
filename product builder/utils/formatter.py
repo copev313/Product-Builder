@@ -272,7 +272,7 @@ def format_images(image_col):
     return pd.Series(formatted_list)
 
 
-# UNDER CONSTRUCTION...
+# TODO: UNDER CONSTRUCTION...
 def trim_empty(df, ref_col):
     # Boolean array - True when value is empty
     bool_array = pd.isnull(ref_col)

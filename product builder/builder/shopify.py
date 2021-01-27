@@ -52,7 +52,6 @@ def shopify_builder(sticky_note):
 
     # Columns That Require Some Formatting
 
-    # TODO: Fix SKU func (idk if this is still broken)
     sku = frm.format_skus(df['Handle'], name)
     enabled = frm.drop_down_named(name, 'no')
     weight = frm.grams_to_pounds(df['Variant Grams'])
@@ -61,7 +60,7 @@ def shopify_builder(sticky_note):
     meta = frm.format_meta(name, brand)
 
     NUM_ROWS = len(sku)
-    print("NUM_ROWS: " + str(NUM_ROWS))  # debug
+    print("DEBUG: NUM_ROWS: " + str(NUM_ROWS))  # debug
 
     vendor = frm.drop_down(email, NUM_ROWS)
     cat = frm.format_categories(brand, NUM_ROWS)

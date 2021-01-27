@@ -23,10 +23,12 @@ def validate_headers(df=pd.DataFrame()):
         The boolean indicates whether the validation has passed. The list
         contains the headers that were missing, if applicable.
     """
-    required_headers = ['Handle', 'Title', 'Body (HTML)', 'Option1 Name',
-                        'Option1 Value', 'Option2 Name', 'Option2 Value',
-                        'Option3 Name', 'Option3 Value', 'Variant Price',
-                        'Image Src', 'Variant Grams'
+    required_headers = ['Handle', 'Title', 'Body (HTML)',
+                        'Option1 Name', 'Option1 Value',
+                        'Option2 Name', 'Option2 Value',
+                        'Option3 Name', 'Option3 Value',
+                        'Variant Price', 'Image Src',
+                        'Variant Grams'
                         ]
     included_headers = df.columns
     missing_headers = []
@@ -41,13 +43,12 @@ def validate_headers(df=pd.DataFrame()):
 
     # CASE: No Missing Headers
     if (len(missing_headers) == 0):
-        print("Headers Validated!")  # debug
-        tp = (True, missing_headers)
+        print("DEBUG: Headers Validated!")  # debug
+        return (True, missing_headers)
     # CASE: Missing Headers
     else:
-        print("We found missing headers during validation!!!")  # debug
-        tp = (False, missing_headers)
-    return tp
+        print("DEBUG: We found missing headers during validation!!!")  # debug
+        return (False, missing_headers)
 
 
 def check_email(email=''):
@@ -64,7 +65,8 @@ def check_email(email=''):
     __ : bool
         Returns True if the string was in an email format, otherwise False.
     """
-    regex = r"^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$"
+    raw = r"^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9-.]+[.][a-zA-Z]{2,4}$"
+    regex = re.compile(raw)
     return True if re.search(regex, email) else False
 
 
@@ -115,30 +117,30 @@ def create_brand_folder(brandname='', mainfolder='Downloads'):
     # "C:Users/{username}"
     currentuser = os.path.expanduser("~")
     # Default Directory Location
-    directory_location = "{cu}\{mf}\{bn}".format(cu=currentuser,
-                                                 mf=mainfolder,
-                                                 bn=brandname)
-    # Returns bool - Whether The Folder Exists Already in the Given Location
-    folder_exists = os.path.isdir(directory_location)
+    dir_loc = "{cu}\{mf}\{bn}".format(cu=currentuser,    # noqa: W605
+                                      mf=mainfolder,
+                                      bn=brandname)
+    # Returns bool - Whether the folder exists already in the given location.
+    folder_exists = os.path.isdir(dir_loc)
     # Iterator used to make name unique
     i = 1
 
     # Handle Naming in Case of FileExistsError
     while folder_exists:
-        # Alter the Name with Iterating Number
-        directory_location = directory_location + " ({int})".format(int=i)
-        folder_exists = os.path.isdir(directory_location)
+        # Alter the name with iterating number
+        dir_loc = dir_loc + " ({int})".format(int=i)  # TODO: Fix Naming Issue
+        folder_exists = os.path.isdir(dir_loc)
         i += 1
 
     # Create Directory
     try:
-        # this mode allows read/write file operations in the created directory
-        os.mkdir(directory_location, mode=0o666)
-        print("Successfully created directory: " + directory_location)  # debug
+        # This mode allows read/write operations in the created directory.
+        os.mkdir(dir_loc, mode=0o666)
+        print("DEBUG: Successfully created directory: " + dir_loc)  # debug
     except FileExistsError:
-        print("Error! This folder seems to already exist in: Downloads.")
+        print("ERR: This folder already exist in:  " + mainfolder)  # debug
 
-    return directory_location
+    return dir_loc
 
 
 def store_csvs(brandname, folder_loc, dict_of_df):
@@ -155,12 +157,18 @@ def store_csvs(brandname, folder_loc, dict_of_df):
     dict_of_df : dict (of the form: {str: pandas.DataFrame})
         A dictionary storing formatted DataFrames.
     """
-    # Store each DataFrame as CSV in the folder
+    # Stores each DataFrame as a CSV in the folder's location.
     try:
         for key, value in dict_of_df.items():
-            pathway = "{fl}\products - {bn} - {k}.csv".format(fl=folder_loc,
-                                                              bn=brandname,
-                                                              k=key)
+            pathway = str(folder_loc)
+            pathway += "\products - " + str(brandname)      # noqa: W605
+            pathway += " - " + str(key) + ".csv"
             value.to_csv(pathway, header=True, index=False)
     except FileNotFoundError as err:
         print("Error! " + err)
+
+    # POSSIBLE CSV MANIPULATION HERE (with csv module & DictWriter/Reader):
+
+    # GOOGLE SHEETS EXPERIMENT (with ezsheets module):
+
+    # OPEN SHEET IN BROWSER (using webrowser module)

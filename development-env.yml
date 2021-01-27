@@ -1,11 +1,10 @@
-name: PB-dev
+name: ProductBuilderDev
 channels:
   - defaults
 dependencies:
-  - flake8=3.8.4
+  - flake8=2.8.4
   - numpy=1.19.2
   - pandas=1.2.1
   - pip=20.3.3
-  - pytest=6.2.1
-  - python=3.9.1
-  - sphinx=3.4.3
+  - python=3.8.5
+  - sphinx=1.0.2

@@ -1,0 +1,64 @@
+-------------------------------------------------------------------------------------
+Product Builder Changes Log
+-------------------------------------------------------------------------------------
+
+Release Summary: 
+
+v.0.1.0, January 27, 2021: 
+     An initial release of a 'in the works' program for building bulk product import 
+          CSVs for XCart from a Shopify product export file.
+
+
+Details of each release follows, from most recent to oldest.
+_____________________________________________________________________________________
+
+Release 0.1.0 : January 27th 2021 
+
+Current features include:
+
+     ======== OVERALL ========
+     + Tab Interface for Three Step Process (i.e. Upload CSV File, Data Input & 
+          Confirmation, Conversion & Export Files).
+     + Program Title, Version, and Window Icon.
+     + Colorful Buttons for Your Viewing Pleasure & Bold Fonts for Emphasis. :)
+
+     ======== STEP 1 ========
+     + CSV File Selection / Open File Dialog Window.
+     + FileNotFound Warning Dialog.
+     + Column Header Requirements Validation Upon Successful Upload.
+
+     * Plans to Make Header Requirements Less Strict in a Future Update.
+
+     ======== STEP 2 ========
+     + Text Field & Combobox Selector UI Elements with Labels.
+     + Warning Message Dialog When Step 1 is not Completed.
+     + Example Brand & Email Address Included.
+     + Brand Name (Nonempty) Validation with Warning Dialog.
+     + Email Address Format Validation with Warning Dialog.
+     + Build Type Combobox with Readonly Text & 'Shopify' Build Option.
+     + Data Input Yes/No Confirmation Dialog with Uploaded CSV File Location.
+     + Data Submittion Complete Dialog.
+     + Text Fields Clear Upon Successful Submittion.
+
+     * Plans to Add Additional Build Types in Future Updates.
+
+     ======== STEP 3 ========
+     + Warning Message Dialog When Step 2 in not Complete.
+     + Confirmation Yes/No Dialog Before Build Process Executes.
+     + Completion Dialog When Build Process is Complete.
+     + Placeholders for Statistic Information.
+     + Export Finished Dialog Including the New CSV File's Location.
+     + Export of Formatted CSV Files to a Created Directory Named After the Brand.
+     + Directory Name Alteration When a Folder Already Existing with a Given Name.
+     + Exported CSV Files Automatically Named: 
+          'products - {BRANDNAME} - {SHEETNAME}.csv'
+          (i.e. 'products - MY SOCKIES - MASTER IMPORT.csv')
+     + CSV Files Created for Master Import, Sku Key, Image Key, & Image Import.
+     
+     * Plans to Add Statistical Info From Product Build Execution to Completion Dialog.
+     * Plans to Add Defaults Sheet CSV Creation in the Next Update.
+     
+     # Issue with Folder Naming Occurs After '(1)' is Added to the Name for 
+          Uniqueness. (More of an annoyance than an issue, but still worth noting.)
+
+-------------------------------------------------------------------------------------
