@@ -4,8 +4,11 @@ import pandas as pd
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox, filedialog
+import webbrowser
 
-from utils import validator as validation
+from utils import validator as validation   # TODO: Rename/Refactor file name
+from utils import drive
+from utils import excel
 from builder.shopify import shopify_builder
 # from builder.etsy import etsy_builder
 
@@ -16,8 +19,9 @@ QED = None
 
 # * * * * * * * *  STYLING CONSTANTS  * * * * * * * * * * * * *
 ICON_LOC = 'icon.png'
-WINDOW_TITLE = "Product Builder  (Alpha 1)"
-WINDOW_DIMENSIONS = '320x218'
+WINDOW_TITLE = "Product Builder  (Alpha 2.0)"
+WINDOW_WIDTH, WINDOW_HEIGHT = (320, 218)
+
 BTN_PADDING = 5
 BTN_BORDER = 4
 BTN_FONT_FAMILY = 'Segoe UI'
@@ -28,7 +32,7 @@ COMBOBOX_WIDTH = 18
 
 # Window:
 ROOT = tk.Tk()
-ROOT.geometry(WINDOW_DIMENSIONS)
+ROOT.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 ROOT.title(WINDOW_TITLE)
 ROOT.iconphoto(False, tk.PhotoImage(file=ICON_LOC))
 
@@ -80,10 +84,13 @@ def select_csv():
             missing_list = returned_tuple[1]
             slip = ''
             for x in missing_list:
-                slip += "+ {}\n".format(x)
-            messagebox.showerror("CSV Format Error",
-                                 "The CSV selected is missing the following " +
-                                 "required header(s):\n\n" + slip)
+                slip += f"+ {x}\n"
+
+            # Form the error message
+            p1 = "The CSV is missing the following required header(s): "
+            err_msg = f"{p1}\n\n{slip}"
+            messagebox.showerror("CSV Format Error", err_msg)
+
         # CASE: Empty DataFrame
         elif(len(df) == 0):
             messagebox.showwarning('Problemo!',
@@ -93,13 +100,13 @@ def select_csv():
             pass
 
     # CATCH: Invalid Filepath--
-    except FileNotFoundError as e:
+    except FileNotFoundError as err:
+        r = err.replace('[Errno 2]', 'ERR:')
         messagebox.showerror('Error in opening file!',
-                             "Select a valid CSV file to continue.\n\n"
-                             + str(e).replace('[Errno 2]', 'ERR:'))
+                             f"Select a valid CSV file to continue.\n\n{r}")
     # CATCH: Empty Data Error--
-    except pd.errors.EmptyDataError as e:
-        messagebox.showwarning('Empty Data Error!', e)
+    except pd.errors.EmptyDataError as err:
+        messagebox.showwarning('Empty Data Error!', err)
 
 
 # Submit Input Event (TAB 2):
@@ -114,12 +121,13 @@ def submit_input():
         returned_tuple = validation.validate_headers(df)
 
     except FileNotFoundError as err:
-        messagebox.showwarning("Warning -- File Not Found",
-                               "Please select a CSV file in Step 1.\n\n" +
-                               str(err).replace('[Errno 2]', 'ERR:'))
+        r = err.replace('[Errno 2]', 'ERR:')
+        err_str = f"Please select a CSV file in Step 1.\n\n{r}"
+        messagebox.showwarning("Warning -- File Not Found", err_str)
         # End process
         return
 
+    # Some input validation...
     # CASE: Empty Brand Name
     if(brand == ""):
         messagebox.showwarning("Warning -- More Info Required",
@@ -137,13 +145,13 @@ def submit_input():
         messagebox.showwarning('Problemo!', 'The selected CSV has no rows.')
     # CASE: Looks Good
     else:
-        # Confirm Input
+        # Confirm User's Input:
         confirm = messagebox.askyesno('Confirmation',
-                                      'Is the following information correct?' +
-                                      '\n\nBrand Name:    ' + str(brand) +
-                                      '\nVendor Email:  ' + str(email) +
-                                      '\nBuild Type:       ' + str(buildtype) +
-                                      "\n\nCSV's Filepath:\n" + str(FILEPATH)
+                                      "Is the following information correct?" +
+                                      f"\n\nBrand Name:    {brand}" +
+                                      f"\nVendor Email:  {email}" +
+                                      f"\nBuild Type:       {buildtype}" +
+                                      f"\n\nCSV's Filepath:\n{FILEPATH}"
                                       )
         # YES --
         if(confirm):
@@ -161,8 +169,7 @@ def submit_input():
                                                  FILEPATH)
         # NO --
         else:
-            messagebox.showinfo('Confirmation',
-                                'Process cancelled.')
+            messagebox.showinfo('Confirmation', 'Process cancelled.')
 
 
 # Convert CSV Event (TAB 3):
@@ -170,44 +177,47 @@ def convert_csv():
     global STICKY_NOTE
     # CASE: Input Confirmed and Submitted
     if(STICKY_NOTE is not None):
-        confirm_convert = messagebox.askyesno('Confirmation',
-                                              'Would like to proceed?')
+        confirm = messagebox.askyesno('Confirmation',
+                                      'Would like to proceed?')
         # YES --
-        if(confirm_convert is True):
+        if(confirm):
             build_type = STICKY_NOTE["BUILDTYPE"]
             print("DEBUG: Conversion Confirmed for Takeoff!")  # debug
             global QED
 
             # CASE: Shopify Build
             if(build_type == 'Shopify'):
+                # Store a dict of formatted DataFrames into *global* var QED.
                 QED = shopify_builder(STICKY_NOTE)
+
+            '''
             # CASE: Etsy Build
-            # elif(build_type == 'Etsy'):
-            #   QED = etsy_builder(STICKY_NOTE)
+            elif(build_type == 'Etsy'):
+                QED = etsy_builder(STICKY_NOTE)
+            '''
 
-            # CASE: ...or else
-            else:
-                QED = pd.DataFrame(STICKY_NOTE)
+            # Piece together strings and stats for Completion Message.
+            p1 = "The CSV is converted and is ready to export."
+            p2 = "[Statistics -- Coming Soon!]"
 
-            messagebox.showinfo('Complete!',
-                                "The CSV is converted and is ready " +
-                                "to export.\n\n[Statistics -- Coming Soon!]" +
-                                "\n\n • number_of_rows_processed" +
-                                "\n • execution_time_in_seconds" +
-                                "\n • num_defaults_and_variants_ratio" +
-                                "\n • number_of_option_columns_created"
-                                )
             # TODO: Add Stats Information to Message
+            s1 = "• number_of_rows_processed."
+            s2 = "• execution_time_in_seconds."
+            s3 = "• num_defaults_and_variants_ratio."
+            s4 = "• number_of_option_columns_created."
+            complete_msg = f"{p1}\n\n{p2}\n\n {s1}\n {s2}\n {s3}\n {s4}"
+
+            # Prompt Completion Message & Build Stats
+            messagebox.showinfo('Complete!', complete_msg)
 
         # NO --
         else:
-            messagebox.showinfo('Confirmation',
-                                'Process cancelled')
+            messagebox.showinfo('Confirmation', 'Process cancelled')
+
     # CASE: Step 2 Not Confirmed
     else:
-        messagebox.showwarning('More Info Required',
-                               'Confirm and submit the information in ' +
-                               'Step 2 to continue.')
+        warn_msg = "Confirm and submit the information in Step 2 to continue."
+        messagebox.showwarning('More Info Required', warn_msg)
 
 
 # Export CSV Event (TAB 3):
@@ -218,22 +228,45 @@ def export_csv():
     # CASE: Cannot Export Yet...
     if(QED is None):
         messagebox.showwarning('Warning -- Conversion Not Complete!',
-                               'You must convert the CSV before you can '
-                               + 'export the files.')
+                               'You must convert the CSV before you can ' +
+                               'export the files.')
     # CASE: Converted and Ready to Export
     else:
+        # Define variables necessary for making the directory.
         brandname = STICKY_NOTE["BRAND"]
+        mainfolder = 'Desktop'
 
-        # Create Folder & Store Path
-        folder_loc = validation.create_brand_folder(brandname=brandname)
-        # Store CSVs in the Folder
-        validation.store_csvs(brandname=brandname,
-                              folder_loc=folder_loc,
-                              dict_of_df=QED)
-        # Message Folder Name
-        messagebox.showinfo("Finished!",
-                            "Files have been stored at:\n" +
-                            str(folder_loc))
+        # Generate prompt message / warning
+        m0 = 'Please note that exporting this product build will:'
+        m1 = f'- Create a folder in/on your {mainfolder}.'
+        m2 = '- Create a Google Sheet in your Drive (permissions required).'
+        m3 = '- Open the new Sheet in the browser.'
+        m4 = 'Would you still like to continue?'
+        glue_str = f'{m0}\n\n{m1}\n{m2}\n{m3}\n\n{m4}'
+        prompt = messagebox.askyesno('BEFORE YOU EXPORT!', glue_str)
+
+        # Process Confirmation:
+        if (prompt):
+            # [1] Create Folder & Store the its Path
+            folder_loc = validation.create_brand_folder(brandname=brandname,
+                                                        mainfolder=mainfolder)
+
+            # [2] Throw DataFrames into an Excel document.
+            excel_doc_loc = excel.to_excel(brandname, folder_loc, QED)
+
+            # [3] Send Excel workbook to Google Sheets.
+            title = f"products - {brandname} [created with 🐍]"
+            gsheet_url = drive.google_drive(upload_file_loc=excel_doc_loc,
+                                            title=title)
+
+            '''
+            # Store CSVs in the Folder
+            validation.store_csvs(brandname=brandname,
+                                folder_loc=folder_loc,
+                                dict_of_df=QED)
+            '''
+            # [4] Open the new Google sheet in the browser.
+            webbrowser.open(url=gsheet_url, new=2)
 
 
 # * * * * * * *  CREATE BUTTON & DROPDOWN OBJECTS  * * * * * * * * * * * *
@@ -297,13 +330,13 @@ build_combobox = ttk.Combobox(tab2,
 
 # * * * * * * *  LAYOUT WIDGETS / UI COMPONENTS  * * * * * * * * * *
 
-# TAB BAR
+# == TAB BAR ==
 tabControl.grid(row=0, column=0, pady=5, padx=5, sticky=tk.W)
 
-# TAB1
+# | TAB1 |
 choose_csv_btn.grid(row=1, column=2, pady=65, padx=100)
 
-# TAB2
+# | TAB2 |
 brand_label.grid(row=1, column=0, padx=5, pady=15)
 brand_name_field.grid(row=1, column=1, padx=5, pady=15)
 
@@ -316,7 +349,7 @@ build_combobox.current(0)       # Sets default selection to the first option
 
 submit_btn.grid(row=4, column=1, padx=70, pady=8, sticky=tk.W)
 
-# TAB3
+# | TAB3 |
 convert_btn.grid(row=0, column=0, padx=90, pady=30)
 export_btn.grid(row=1, column=0, padx=90, pady=0)
 

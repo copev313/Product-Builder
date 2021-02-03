@@ -27,7 +27,10 @@ def shopify_builder(sticky_note):
     email = sticky_note["EMAIL"]
     fp = sticky_note["FILEPATH"]
 
-    # Create DataFrame
+    # Store Original for Linesheet & Edit
+    original_df = pd.read_csv(fp)
+
+    # Create DataFrame to Format
     df = pd.read_csv(fp)
 
     # Columns That Just Need Copied
@@ -99,11 +102,11 @@ def shopify_builder(sticky_note):
     # Now Trim Rows w/o an Image Value
     image_import_df = frm.trim_empty(names_only, imgs)
 
-    # defaults_df = pd.DataFrame({ })
-    # variants_df = pd.DataFrame({ })
-
-    # TODO: Add Defaults & Variants Sheet
-    return {"MASTER IMPORT": master_import_df,
+    # TODO: Add Formatted Defaults & Variants Sheet
+    # TODO: Add Return for Stats Data!!!
+    return {"LINE SHEET": original_df,
+            "EDIT": original_df,
+            "MASTER IMPORT": master_import_df,
             "SKU KEY": sku_key_df,
             "IMAGE KEY": image_key_df,
             "IMAGE IMPORT": image_import_df,

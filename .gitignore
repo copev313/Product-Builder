@@ -1,6 +1,12 @@
+# VS Code Settings:
 /.vscode
+
+# Tests
 /product builder/tests
-/.pytest_cache
-/product builder/utils/__pycache__
-/product builder/builder/__pycache__
-/product builder/__pycache__
+.pytest_cache/
+
+# Byte-compiles
+__pycache__/
+
+# pydrive OAuth
+/client_secrets.json

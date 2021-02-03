@@ -62,15 +62,15 @@ def check_email(email=''):
 
     Returns
     -------
-    __ : bool
-        Returns True if the string was in an email format, otherwise False.
+    bool
+        Returns True if the string is in an email format, otherwise False.
     """
-    raw = r"^[a-zA-Z0-9._%+-]+[@][a-zA-Z0-9-.]+[.][a-zA-Z]{2,4}$"
+    raw = r"^[a-zA-Z0-9._%+-]{3,}[@][a-zA-Z0-9-.]{2,}[.][a-zA-Z]{2,4}$"
     regex = re.compile(raw)
     return True if re.search(regex, email) else False
 
 
-def sticky_note(brand='', email='', buildtype='', filepath=''):
+def sticky_note(brand='', email='', buildtype='Shopify', filepath=''):
     """
     Creates a dictionary for storing and sending necessary build information.
 
@@ -90,7 +90,7 @@ def sticky_note(brand='', email='', buildtype='', filepath=''):
     Returns
     -------
     dict
-        Dictionary storing brand name, email, build type, and CSV filepath.
+        Dictionary storing the brand name, email, build type, and CSV filepath.
     """
     return {'BRAND': brand, 'EMAIL': email,
             'BUILDTYPE': buildtype, 'FILEPATH': filepath}
@@ -104,9 +104,9 @@ def create_brand_folder(brandname='', mainfolder='Downloads'):
     Parameters
     ----------
     brandname : str, optional
-        The brand name, by default ''
+        The brand name used for the folder's name, by default ''
     mainfolder : str, optional
-        The main folder in the user's directory to create the folder,
+        The main workspace in the user's directory to create the folder,
         by default 'Downloads'.
 
     Returns
@@ -116,33 +116,47 @@ def create_brand_folder(brandname='', mainfolder='Downloads'):
     """
     # "C:Users/{username}"
     currentuser = os.path.expanduser("~")
+
     # Default Directory Location
-    dir_loc = "{cu}\{mf}\{bn}".format(cu=currentuser,    # noqa: W605
-                                      mf=mainfolder,
-                                      bn=brandname)
+    dir_loc = f"{currentuser}\{mainfolder}\{brandname}"  # noqa: W605
+
     # Returns bool - Whether the folder exists already in the given location.
     folder_exists = os.path.isdir(dir_loc)
-    # Iterator used to make name unique
+
+    # Initialize just in case we need an alternative save location.
+    new_dir_loc = ''
+
+    # Iterator used to make name unique.
     i = 1
 
     # Handle Naming in Case of FileExistsError
     while folder_exists:
-        # Alter the name with iterating number
-        dir_loc = dir_loc + " ({int})".format(int=i)  # TODO: Fix Naming Issue
-        folder_exists = os.path.isdir(dir_loc)
+        # Change the name with an iterating number.
+        new_dir_loc = f"{dir_loc} ({i})"
+        # Re-evaluate if the folder exists.
+        folder_exists = os.path.isdir(new_dir_loc)
         i += 1
 
-    # Create Directory
+    # Once Directory Location is Confirmed Unique --> Create Directory
     try:
-        # This mode allows read/write operations in the created directory.
-        os.mkdir(dir_loc, mode=0o666)
-        print("DEBUG: Successfully created directory: " + dir_loc)  # debug
+        # CASE: Alternate Folder Path Was Created.
+        if (new_dir_loc):
+            dir_loc = new_dir_loc
+        # CASE: No Alternate Path Needed -- Use Default Path
+        else:
+            pass
+
+        # Create the Directory in the Proper Location w/ Read/Write Permissions
+        os.makedirs(dir_loc, mode=0o666)
+        print(f"DEBUG: Successfully created directory: {dir_loc}")  # debug
+
     except FileExistsError:
-        print("ERR: This folder already exist in:  " + mainfolder)  # debug
+        print(f"ERR: This folder already exist in: {mainfolder}")  # debug
 
     return dir_loc
 
 
+# NOTE: MAY NOT NEED TO STORE AS CSV FILES AFTER ALL (MAY JUST KEEP AS BACKUPS)
 def store_csvs(brandname, folder_loc, dict_of_df):
     """
     Stores DataFrame values from a dictionary as CSV files in a folder
@@ -159,16 +173,9 @@ def store_csvs(brandname, folder_loc, dict_of_df):
     """
     # Stores each DataFrame as a CSV in the folder's location.
     try:
-        for key, value in dict_of_df.items():
-            pathway = str(folder_loc)
-            pathway += "\products - " + str(brandname)      # noqa: W605
-            pathway += " - " + str(key) + ".csv"
-            value.to_csv(pathway, header=True, index=False)
+        for key, df in dict_of_df.items():
+            path = f"{folder_loc}\products - {brandname} - {key}.csv"  # noqa
+            df.to_csv(path, header=True, index=False)
+
     except FileNotFoundError as err:
-        print("Error! " + err)
-
-    # POSSIBLE CSV MANIPULATION HERE (with csv module & DictWriter/Reader):
-
-    # GOOGLE SHEETS EXPERIMENT (with ezsheets module):
-
-    # OPEN SHEET IN BROWSER (using webrowser module)
+        print(f"Error! -- {err}")
