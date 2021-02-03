@@ -10,3 +10,4 @@ __pycache__/
 
 # pydrive OAuth
 /client_secrets.json
+/product builder/utils/SlitherySnake.xls

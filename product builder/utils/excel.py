@@ -2,8 +2,9 @@
 
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl.styles import (Color, Font)
-from openpyxl.styles.fills import PatternFill
+from openpyxl.styles import Font
+# from openpyxl.styles.colors import Color
+# from openpyxl.styles.fills import PatternFill
 
 
 def to_excel(brandname, folder_loc, dict_of_df):
@@ -45,20 +46,20 @@ def to_excel(brandname, folder_loc, dict_of_df):
 
         for row in dataframe_to_rows(df, index=False, header=True):
             ws.append(row)
-    '''
+
     # [3] Style the Headers Because I'm Fancy.
     FONT_STYLE = Font(name='Arial', size=10, bold=True)    # Arial 10pt Bold
     # col_width = 100
     # row_height = 21
 
     # Color Constants:
-    RED = Color(rgb='FA5E52')
-    PURPLE = Color(rgb='C89DD1')
-    DARKPURPLE = Color(rgb='9B78CC')
-    TEAL = Color(rgb='9CC9D9')
-    GREEN = Color(rgb='85C771')
-    ORANGE = Color(rgb='EDB561')
-    YELLOW = Color(rgb='F0EB69')
+    RED = 'FA5E52'
+    PURPLE = 'C89DD1'
+    DARKPURPLE = '9B78CC'
+    TEAL = '9CC9D9'
+    GREEN = '85C771'
+    ORANGE = 'EDB561'
+    YELLOW = 'F0EB69'
 
     color_dict = {"LINE SHEET": None,
                   "EDIT": None,
@@ -100,7 +101,7 @@ def to_excel(brandname, folder_loc, dict_of_df):
     # Run through each sheet and style with font and colorfill.
     for key, value in color_dict.items():
 
-        # CASE: No Styling on Linesheet or Edit
+        # CASE: No Color Styling Defines --> Go To Next Sheet
         if (value is None):
             continue
 
@@ -109,7 +110,7 @@ def to_excel(brandname, folder_loc, dict_of_df):
             # Select worksheet
             ws = wkbk[key]
             # Iterator for column references
-            col_it = 1
+            col_iter = 1
 
             # Iterate through cells in the first row and apply font.
             for cell in ws['1:1']:
@@ -118,24 +119,24 @@ def to_excel(brandname, folder_loc, dict_of_df):
                     cell.font = FONT_STYLE
                 # CASE) Cell contains no value --> Delete the Column
                 else:
-                    ws.delete_cols(col_it)
+                    ws.delete_cols(col_iter)
                 # Increase iterator
-                col_it += 1
-
+                col_iter += 1
+        '''
             # Iterate through first row and apply colorfill from color_dict.
             for cell_range, color_const in value.items():
                 # Store the cell location
                 cell = ws[cell_range]
-                # Create the fill style
-                the_fill = PatternFill(patternType='solid',
-                                       fgColor=color_const)
-                # Apply the fill to the appropriate cell
-                cell.fill = the_fill
-'''
+                # Apply the fill style to the cell.
+                cell.fill = PatternFill(bgColor=color_const,
+                                        fill_type="solid")
+        '''
     # Create Workbook Name & Save Location
     workbk_nm = f"products - {brandname}"
     save_loc = f"{folder_loc}\{workbk_nm}.xlsx"  # noqa: W605
+
     # Save workbook to save_loc
     wkbk.save(save_loc)
+
     # Return the location we saved the workbook to.
     return save_loc

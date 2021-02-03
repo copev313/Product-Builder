@@ -302,7 +302,7 @@ convert_btn = tk.Button(tab3,
                         )
 
 export_btn = tk.Button(tab3,
-                       text="Export CSVs",
+                       text="EXPORT!",
                        command=export_csv,
                        bg='#BA45CE',       # purple
                        font=(BTN_FONT_FAMILY, 12, 'bold'),
